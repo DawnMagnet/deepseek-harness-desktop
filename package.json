@@ -1,0 +1,19 @@
+{
+  "name": "deepseek-harness-desktop",
+  "version": "0.1.0",
+  "description": "A simple Windows desktop launcher for DeepSeek Harness",
+  "author": "DeepSeek Harness Desktop",
+  "license": "MIT",
+  "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "scripts": {
+    "prepare-runtime": "powershell -ExecutionPolicy Bypass -File scripts/prepare-runtime.ps1",
+    "build": "pnpm prepare-runtime && node node_modules/@tauri-apps/cli/tauri.js build"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.6"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.4"
+  }
+}

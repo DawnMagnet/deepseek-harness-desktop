@@ -1,0 +1,12 @@
+node_modules/
+package-lock.json
+runtime/
+src-tauri/runtime-bundle/
+src-tauri/runtime-bundle-deploy/
+src-tauri/runtime-deploy/
+src-tauri/runtime-test2/
+src-tauri/runtime/deploy-package.json
+src-tauri/runtime/node_modules/
+src-tauri/runtime/.pnpm-store/
+src-tauri/target/
+tauri-build*.log
