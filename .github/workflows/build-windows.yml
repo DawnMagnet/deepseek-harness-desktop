@@ -1,6 +1,6 @@
 name: Build Windows Desktop App
 
-on:
+"on":
   workflow_dispatch:
   push:
     tags: ['v*']
