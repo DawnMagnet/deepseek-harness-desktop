@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $source = Join-Path $projectRoot 'src-tauri\runtime'
-$runtime = Join-Path $PSScriptRoot '..\src-tauri\runtime-bundle'
+$runtime = Join-Path $projectRoot 'src-tauri\runtime-bundle'
 $nodeSource = Join-Path $source 'node.exe'
 
 New-Item -ItemType Directory -Force -Path $source | Out-Null
@@ -15,9 +15,15 @@ if (-not (Test-Path -LiteralPath $nodeSource)) {
 }
 
 if (Test-Path -LiteralPath $runtime) { Remove-Item -LiteralPath $runtime -Recurse -Force }
-Push-Location $projectRoot
-pnpm deploy --prod --legacy --filter . src-tauri\runtime-bundle --registry=https://registry.npmmirror.com
-if ($LASTEXITCODE -ne 0) { throw "pnpm deploy failed with exit code $LASTEXITCODE" }
+New-Item -ItemType Directory -Force -Path $runtime | Out-Null
+Copy-Item (Join-Path $projectRoot 'package.json') (Join-Path $runtime 'package.json') -Force
+
+# pnpm remains the project package manager. npm is intentionally used only here
+# to materialize a flat runtime tree, because NSIS cannot reliably read the
+# long junction paths produced by pnpm's virtual store on Windows.
+Push-Location $runtime
+npm install --omit=dev --no-audit --no-fund --registry=https://registry.npmmirror.com
+if ($LASTEXITCODE -ne 0) { throw "npm runtime install failed with exit code $LASTEXITCODE" }
 Pop-Location
 
 Copy-Item $nodeSource (Join-Path $runtime 'node.exe') -Force

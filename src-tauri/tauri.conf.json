@@ -12,7 +12,7 @@
     "resources": ["runtime-bundle"],
     "windows": {
       "webviewInstallMode": { "type": "downloadBootstrapper" },
-      "nsis": { "compression": "zlib" }
+      "nsis": { "compression": "none" }
     }
   }
 }
