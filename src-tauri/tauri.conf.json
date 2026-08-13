@@ -10,6 +10,9 @@
     "icon": ["icons/icon.svg"],
     "targets": ["nsis"],
     "resources": ["runtime-bundle"],
-    "windows": { "webviewInstallMode": { "type": "downloadBootstrapper" } }
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": { "compression": "zlib" }
+    }
   }
 }
