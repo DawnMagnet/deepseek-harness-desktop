@@ -3,18 +3,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DeepSeek Harness</title>
 <style>body{font:16px system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:grid;place-items:center;height:100vh;margin:0}main{text-align:center}small{color:#94a3b8}</style>
-<main><h1>DeepSeek Harness</h1><p id="status">正在启动本地服务…</p><small>首次启动可能需要几秒钟</small></main>
+<main><h1>DeepSeek Harness</h1><p id="status">正在启动本地服务…</p><small id="detail">首次启动可能需要几秒钟</small></main>
 <script>
 const status = document.getElementById('status');
+const detail = document.getElementById('detail');
+const port = new URLSearchParams(location.search).get('port');
+const backend = port ? `http://127.0.0.1:${port}/` : null;
 let attempts = 0;
 const probe = async () => {
+  if (!backend) {
+    status.textContent = '启动参数无效';
+    detail.textContent = '请重新安装应用';
+    return;
+  }
   attempts += 1;
   try {
-    await fetch('http://127.0.0.1:3080/', { mode: 'no-cors', cache: 'no-store' });
-    location.replace('http://127.0.0.1:3080/');
+    await fetch(backend, { mode: 'no-cors', cache: 'no-store' });
+    location.replace(backend);
   } catch {
-    status.textContent = attempts > 60 ? '本地服务启动失败，请重启应用' : '正在启动本地服务…';
-    if (attempts < 90) setTimeout(probe, 500);
+    if (attempts >= 120) {
+      status.textContent = '本地服务启动失败';
+      detail.textContent = '错误详情已写入应用日志目录的 backend.log';
+      return;
+    }
+    setTimeout(probe, 500);
   }
 };
 probe();

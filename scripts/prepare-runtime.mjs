@@ -6,7 +6,6 @@ import { spawn } from 'node:child_process'
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const runtime = join(projectRoot, 'src-tauri', 'runtime-bundle')
 const packageFile = join(projectRoot, 'package.json')
-const launcher = join(projectRoot, 'src-tauri', 'launcher.cjs')
 
 const run = (command, args, cwd) => new Promise((resolve, reject) => {
   const child = spawn(command, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' })
@@ -27,7 +26,6 @@ await writeFile(join(runtime, 'package.json'), JSON.stringify({
 // it avoids shipping three downloaded archives and keeps the bundle reproducible.
 const nodeName = process.platform === 'win32' ? 'node.exe' : 'node'
 await cp(process.execPath, join(runtime, nodeName))
-await cp(launcher, join(runtime, 'launcher.cjs'))
 await run('npm', ['install', '--omit=dev', '--no-audit', '--no-fund', '--ignore-scripts'], runtime)
 await run('npm', ['rebuild', '--omit=dev', '--no-audit', '--no-fund'], runtime)
 await rm(join(runtime, '.npm'), { recursive: true, force: true })
