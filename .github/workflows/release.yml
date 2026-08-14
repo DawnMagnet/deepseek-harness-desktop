@@ -77,7 +77,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: deepseek-harness-${{ matrix.artifact }}
-          path: src-tauri/target/release/bundle/**
+          path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/deb/*.deb
           if-no-files-found: error
           retention-days: 7
 
@@ -100,4 +103,4 @@ jobs:
           if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --title "DeepSeek Harness Desktop $RELEASE_TAG" --generate-notes --prerelease
           fi
-          find release-assets -type f -print0 | xargs -0 -r gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber
+          find release-assets -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.deb' \) -print0 | xargs -0 -r gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber
