@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{net::TcpStream, process::{Child, Command}, sync::Mutex, thread, time::Duration};
+use std::{process::{Child, Command}, sync::Mutex};
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 struct HarnessProcess(Mutex<Option<Child>>);
@@ -14,11 +14,7 @@ fn main() {
             let child = Command::new(runtime.join(node_name))
                 .arg(runtime.join("launcher.cjs")).current_dir(&runtime).spawn()?;
             *app.state::<HarnessProcess>().0.lock().unwrap() = Some(child);
-            for _ in 0..120 {
-                if TcpStream::connect("127.0.0.1:3080").is_ok() { break; }
-                thread::sleep(Duration::from_millis(500));
-            }
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::External("http://127.0.0.1:3080".parse().unwrap()))
+            WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
                 .title("DeepSeek Harness").inner_size(1440.0, 900.0)
                 .min_inner_size(960.0, 640.0).build()?;
             Ok(())

@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
@@ -32,3 +32,19 @@ await run('npm', ['install', '--omit=dev', '--no-audit', '--no-fund', '--ignore-
 await run('npm', ['rebuild', '--omit=dev', '--no-audit', '--no-fund'], runtime)
 await rm(join(runtime, '.npm'), { recursive: true, force: true })
 await rm(join(runtime, 'node_modules', '.cache'), { recursive: true, force: true })
+
+// Keep executable code and native binaries, but omit files that cannot be
+// loaded at runtime. This reduces installer size without changing resolution.
+const prune = async directory => {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const target = join(directory, entry.name)
+    if (entry.isDirectory()) {
+      if (/^(test|tests|__tests__|docs|examples)$/.test(entry.name)) {
+        await rm(target, { recursive: true, force: true })
+      } else await prune(target)
+    } else if (/\.(map|md|d\.ts)$/.test(entry.name) || /^(README|CHANGELOG|LICENSE)/i.test(entry.name)) {
+      await rm(target, { force: true })
+    }
+  }
+}
+await prune(join(runtime, 'node_modules'))
