@@ -10,7 +10,8 @@ fn main() {
         .manage(HarnessProcess(Mutex::new(None)))
         .setup(|app| {
             let runtime = app.path().resource_dir()?.join("runtime-bundle");
-            let child = Command::new(runtime.join("node.exe"))
+            let node_name = if cfg!(windows) { "node.exe" } else { "node" };
+            let child = Command::new(runtime.join(node_name))
                 .arg(runtime.join("launcher.cjs")).current_dir(&runtime).spawn()?;
             *app.state::<HarnessProcess>().0.lock().unwrap() = Some(child);
             for _ in 0..120 {

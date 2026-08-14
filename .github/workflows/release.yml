@@ -1,0 +1,103 @@
+name: Cross-platform GUI Release
+
+on:
+  push:
+    tags: ['dsh-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, for example dsh-v0.1.0-rc.6'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-2025
+            bundles: nsis
+            artifact: windows
+          - name: macOS
+            os: macos-15
+            bundles: dmg
+            artifact: macos
+          - name: Linux
+            os: ubuntu-24.04
+            bundles: appimage,deb
+            artifact: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout release ref
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Install Linux bundling dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.17.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify release version
+        run: node scripts/check-upstream-version.mjs --expected "$RELEASE_TAG"
+        shell: bash
+
+      - name: Build compact installer
+        run: pnpm build -- --bundles ${{ matrix.bundles }}
+
+      - name: Upload platform artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepseek-harness-${{ matrix.artifact }}
+          path: src-tauri/target/release/bundle/**
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: deepseek-harness-*
+          merge-multiple: true
+
+      - name: Create or update Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --title "DeepSeek Harness Desktop $RELEASE_TAG" --generate-notes --prerelease
+          fi
+          find release-assets -type f -print0 | xargs -0 -r gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber
