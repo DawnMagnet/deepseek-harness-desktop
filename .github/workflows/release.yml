@@ -37,7 +37,7 @@ jobs:
             artifact: macos
           - name: Linux
             os: ubuntu-24.04
-            bundles: appimage,deb
+            bundles: deb
             artifact: linux
     runs-on: ${{ matrix.os }}
     steps:

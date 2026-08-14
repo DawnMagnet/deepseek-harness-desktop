@@ -9,7 +9,7 @@
 
 ## 三平台发布
 
-- `dsh-v*` Tag 触发 `.github/workflows/release.yml`，必须同时构建 Windows、macOS 和 Linux GUI 安装包，并将全部产物上传到本仓库同一个 GitHub Release。
+- `dsh-v*` Tag 触发 `.github/workflows/release.yml`，必须同时构建 Windows、macOS 和 Linux GUI 安装包（NSIS、DMG、DEB），并将全部产物上传到本仓库同一个 GitHub Release。
 - 运行时使用构建 runner 的原生 Node，不下载无关平台二进制；安装包使用 NSIS 的 LZMA 最高压缩模式，并删除 npm 缓存与开发依赖。
 - 发布前运行 `pnpm install --frozen-lockfile`、版本校验和 Rust/Tauri 构建验证。
 
